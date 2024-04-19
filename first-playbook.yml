@@ -1,0 +1,6 @@
+- name: Execute echo command to append to a file
+  hosts: [rocky_linux]
+  become: yes
+  tasks:
+    - name: Append line to a file using echo and tee
+      command: echo "Hello, World!" | tee -a /tmp/hello-server.txt
