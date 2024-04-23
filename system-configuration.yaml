@@ -23,6 +23,16 @@
     - name: Reload sysctl if any configuration changed
       command: sysctl -p
       when: swappiness_result.changed or ipv6_result.changed
+    - name: Disable SELinux temporarily
+      selinux:
+        policy: targeted # Specify the SELinux policy (e.g., targeted, strict, mls)
+        state: permissive
+
+    - name: Update SELinux configuration
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: "^SELINUX="
+        line: "SELINUX=permissive"
 
 - name: Configure net.ipv4.ip_forward only on "vpn" hosts
   hosts: vpn
