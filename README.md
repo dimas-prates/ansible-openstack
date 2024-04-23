@@ -1,5 +1,18 @@
 # ansible-openstack
 
+## Request resumed:
+Request resumed:
+- [x] Setup essential S.O Configuration
+- [x] Adjust network configuration
+- [x] Configure NTP and timezone
+- [x] Mount Object Storage
+- [x] Install Openstack packages on controller and compute groups
+- [ ] Setup HAProxy with Keepalived on controller groups :round_pushpin:
+- [ ] Deploy Memcached on controller groups 
+- [ ] Deploy RabbitMQ on controller groups 
+- [ ] Deploy MariaDB on controller groups
+- [ ] Configure Ceph on storage groups
+
 ### Getting IP and Hostname from a network an making inventory:
 - necessary packages:
 ```bash
