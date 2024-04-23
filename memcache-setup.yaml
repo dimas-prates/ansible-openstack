@@ -1,4 +1,4 @@
-- name: Get interface connections, change names, and disable IPv6 using nmcli and Ansible
+- name: Memcache setup
   hosts: controller
   vars:
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
