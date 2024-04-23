@@ -18,7 +18,7 @@ ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-pl
 ```bash
 ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-playbook.yml
 ```
-### ec2 credentials
+### ec2 credentials for Object Storage
 - Load environment variables from openrc file
 ```bash
 source ~/Downloads/app-cred-cli-myproject-openrc.sh
