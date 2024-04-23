@@ -1,0 +1,47 @@
+- name: Install basic packages and update servers
+  hosts: rocky_linux # Replace 'your_vm_group' with the actual name of your group in your Ansible inventory
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
+    - name: Update dnf package cache
+      become: yes
+      dnf:
+        update_cache: yes
+
+    - name: Install basic packages
+      become: yes
+      dnf:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - unzip
+        - bind-utils
+        - traceroute
+        - vim
+        - whois
+        - tcpdump
+        - smartmontools
+        - net-tools
+        - wget
+        - telnet
+        - iotop
+        - sysstat
+        - chrony
+        - bash-completion
+        - rsyslog
+        - nmap
+        - nmap-ncat
+        - lsof
+        - net-snmp-utils
+        - yum-utils
+        - epel-release
+        - dnf-plugins-core
+        - lynx
+        - langpacks-en
+        # Add more packages as needed
+
+    - name: Upgrade all packages
+      become: yes
+      dnf:
+        name: "*"
+        state: latest
