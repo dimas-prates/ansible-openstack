@@ -1,0 +1,33 @@
+- name: Get interface connections, change names, and disable IPv6 using nmcli and Ansible
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Install memcached and python3-memcached
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - memcached
+        - python3-memcached
+
+    - name: Alter memcached configuration file
+      replace:
+        path: /etc/sysconfig/memcached
+        regexp: 'OPTIONS="-l 127.0.0.1,::1"'
+        replace: 'OPTIONS="-l 127.0.0.1,::1,controller"'
+      notify: Restart memcached
+
+    - name: Ensure memcached service is enabled and restarted
+      service:
+        name: memcached
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart memcached
+      service:
+        name: memcached
+        state: restarted
+        enabled: yes
