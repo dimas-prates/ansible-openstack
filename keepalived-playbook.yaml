@@ -8,6 +8,17 @@
       yum:
         name: keepalived
         state: present
+
+    - name: Ensure directory exists for keepalived.conf
+      file:
+        path: /etc/keepalived
+        state: directory
+
+    - name: Ensure keepalived.conf file exists
+      file:
+        path: /etc/keepalived/keepalived.conf
+        state: touch
+
     - name: Check if keepalived.conf exists
       stat:
         path: /etc/keepalived/keepalived.conf
@@ -22,29 +33,26 @@
 
     - name: Generate new keepalived.conf
       blockinfile:
-      path: /etc/keepalived/keepalived.conf
-      block: |
-        global_defs {
-          router_id {{ ansible_hostname | regex_replace('(.*)\\.\\d+$', '\\1') }}
-          vrrp_skip_check_adv_addr
-          vrrp_strict
-          vrrp_garp_interval 0
-          vrrp_gna_interval 0
-        }
+        path: /etc/keepalived/keepalived.conf
+        block: |
+          global_defs {
+            router_id {{ ansible_hostname}}
+            vrrp_skip_check_adv_addr
+            vrrp_strict
+            vrrp_garp_interval 0
+            vrrp_gna_interval 0
+          }
 
-        vrrp_instance openstack-vip-IP {
-            {% if ansible_hostname == 'controller-1' %}
+          vrrp_instance openstack-vip-IP {
+          {% if ansible_hostname == 'controller-1' %}
             state MASTER
-            {% else %}
+            priority 100
+          {% else %}
             state BACKUP
-            {% endif %}
+            priority 90
+          {% endif %}
             interface eth0
             virtual_router_id 3
-            {% if ansible_hostname == 'vm-1' %}
-            priority 100
-            {% else %}
-            priority 90
-            {% endif %}
             advert_int 1
             authentication {
                 auth_type NONE # No authentication
@@ -52,7 +60,10 @@
             virtual_ipaddress {
                 10.66.66.3
             }
-        }
+          }
+      notify: Restart Keepalived service
+
+  handlers:
     - name: Restart Keepalived service
       service:
         name: keepalived
