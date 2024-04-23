@@ -1,0 +1,60 @@
+- name: Check and configure Keepalived
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Install Keepalived package
+      yum:
+        name: keepalived
+        state: present
+    - name: Check if keepalived.conf exists
+      stat:
+        path: /etc/keepalived/keepalived.conf
+      register: keepalived_conf
+
+    - name: Backup existing keepalived.conf if it exists
+      when: keepalived_conf.stat.exists
+      copy:
+        src: /etc/keepalived/keepalived.conf
+        dest: /etc/keepalived/keepalived.conf.bak
+        remote_src: yes
+
+    - name: Generate new keepalived.conf
+      blockinfile:
+      path: /etc/keepalived/keepalived.conf
+      block: |
+        global_defs {
+          router_id {{ ansible_hostname | regex_replace('(.*)\\.\\d+$', '\\1') }}
+          vrrp_skip_check_adv_addr
+          vrrp_strict
+          vrrp_garp_interval 0
+          vrrp_gna_interval 0
+        }
+
+        vrrp_instance openstack-vip-IP {
+            {% if ansible_hostname == 'controller-1' %}
+            state MASTER
+            {% else %}
+            state BACKUP
+            {% endif %}
+            interface eth0
+            virtual_router_id 3
+            {% if ansible_hostname == 'vm-1' %}
+            priority 100
+            {% else %}
+            priority 90
+            {% endif %}
+            advert_int 1
+            authentication {
+                auth_type NONE # No authentication
+            }
+            virtual_ipaddress {
+                10.66.66.3
+            }
+        }
+    - name: Restart Keepalived service
+      service:
+        name: keepalived
+        state: restarted
+        enabled: yes
