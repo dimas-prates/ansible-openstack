@@ -9,6 +9,7 @@ Request resumed:
 - [x] Install Openstack packages on controller and compute groups
 - [ ] Setup HAProxy with Keepalived on controller groups :round_pushpin:
 - [ ] Deploy Memcached on controller groups 
+- [ ] Password Manager (Optional)
 - [ ] Deploy RabbitMQ on controller groups 
 - [ ] Deploy MariaDB on controller groups
 - [ ] Configure Ceph on storage groups
