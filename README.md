@@ -18,6 +18,20 @@ ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-pl
 ```bash
 ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-playbook.yml
 ```
+### ec2 credentials
+- Load environment variables from openrc file
+```bash
+source ~/Downloads/app-cred-cli-myproject-openrc.sh
+```
+- Create ec2 credentials
+```bash
+openstack ec2 credentials create
+```
+- View ec2 credentials
+```bash
+openstack ec2 credentials list
+```
+
 
 ### Tree
 ```bash
