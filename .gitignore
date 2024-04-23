@@ -2,4 +2,7 @@
 .vscode
 
 # my inventory
-my-hosts-inventory.ini
+openstack-inventory.ini
+
+#credentials
+ec2_credentials.j2
