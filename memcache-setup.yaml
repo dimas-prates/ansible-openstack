@@ -16,7 +16,7 @@
       replace:
         path: /etc/sysconfig/memcached
         regexp: 'OPTIONS="-l 127.0.0.1,::1"'
-        replace: 'OPTIONS="-l 127.0.0.1,::1,controller"'
+        replace: 'OPTIONS="-l 127.0.0.1,controller"'
       notify: Restart memcached
 
     - name: Ensure memcached service is enabled and restarted
