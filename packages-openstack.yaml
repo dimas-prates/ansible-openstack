@@ -1,0 +1,25 @@
+- name: Install Openstack packages
+  hosts: compute:controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Install centos-release-openstack-bobcat package
+      yum:
+        name: centos-release-openstack-bobcat
+        state: present
+    - name: Update package cache
+      dnf:
+        update_cache: yes
+
+    - name: Install python3-openstackclient and openstack-selinux packages
+      yum:
+        name:
+          - python3-openstackclient
+          - openstack-selinux
+        state: present
+
+    - name: Upgrade all packages
+      yum:
+        name: "*"
+        state: latest
