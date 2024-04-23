@@ -1,0 +1,15 @@
+- name: Selinux Disable
+  hosts: rocky_linux
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Disable SELinux temporarily
+      selinux:
+        policy: targeted # Specify the SELinux policy (e.g., targeted, strict, mls)
+        state: permissive
+    - name: Update SELinux configuration
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: "^SELINUX="
+        line: "SELINUX=permissive"
