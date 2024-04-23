@@ -18,3 +18,21 @@ ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-pl
 ```bash
 ansible-playbook --private-key=~/.ssh/ansible.key -vi inventory-tmp.ini first-playbook.yml
 ```
+
+### Tree
+```bash
+$ tree
+.
+├── date-configuration.yaml
+├── ec2_credentials.j2
+├── kernel-parameters.yaml
+├── LICENSE
+├── memcache-setup.yaml
+├── network-interface-change.yaml
+├── object-storage-mountpoint.yaml
+├── openstack-inventory.ini
+├── packages-and-update-playbook.yaml
+├── packages-openstack.yaml
+├── README.md
+└── selinux-disabling.yaml
+```
