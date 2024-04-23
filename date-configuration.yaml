@@ -1,0 +1,35 @@
+- name: Date configuration
+  hosts: rocky_linux
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Set timezone to America/Sao_Paulo
+      timezone:
+        name: America/Sao_Paulo
+
+    - name: Install chrony package
+      package:
+        name: chrony
+        state: present
+
+    - name: Replace existing chrony servers configuration
+      replace:
+        path: /etc/chrony.conf
+        regexp: "^(pool|server) .* iburst$"
+        replace: "pool pool.ntp.br iburst"
+        backup: yes
+      notify:
+        - Restart chrony
+
+    - name: Ensure chronyd service is started and enabled
+      service:
+        name: chronyd
+        state: started
+        enabled: yes
+
+  handlers:
+    - name: Restart chrony
+      service:
+        name: chronyd
+        state: restarted
