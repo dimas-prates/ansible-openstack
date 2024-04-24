@@ -7,9 +7,9 @@ Request resumed:
 - [x] Configure NTP and timezone
 - [x] Mount Object Storage
 - [x] Install Openstack packages on controller and compute groups
-- [x] Setup Keepalived on controller groups :round_pushpin:
-- [ ] Setup HAProxy on controller groups
-- [ ] Deploy Memcached on controller groups 
+- [x] Setup Keepalived on controller groups 
+- [ ] Setup HAProxy on controller groups :round_pushpin:
+- [ ] Deploy Memcached on controller groups :round_pushpin:
 - [ ] Password Manager (Optional)
 - [ ] Deploy RabbitMQ on controller groups 
 - [ ] Deploy MariaDB on controller groups
