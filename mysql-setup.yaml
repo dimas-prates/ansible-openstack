@@ -1,0 +1,58 @@
+- name: Install and configure MariaDB
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Check if MySQL is installed
+      stat:
+        path: /usr/bin/mysql
+      register: mysql_installed
+
+    - name: Ensure required packages are installed
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - mariadb
+        - mariadb-server
+        - python3-PyMySQL
+      when: not mysql_installed.stat.exists
+
+    - name: Get eth0 IP address
+      shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1
+      register: eth0_ip
+
+    - name: Create or overwrite my.cnf configuration file
+      copy:
+        dest: /etc/my.cnf.d/openstack.cnf
+        content: |
+          [mysqld]
+          bind-address = {{ eth0_ip.stdout }}
+          default-storage-engine = innodb
+          innodb_file_per_table = on
+          max_connections = 4096
+          collation-server = utf8_general_ci
+          character-set-server = utf8
+      notify: Restart MariaDB
+
+    - name: Run mysql_secure_installation script
+      command: >
+        mysql_secure_installation
+        creates: /root/.mysql_secure_installation_ran
+        stdin: |
+          y
+          n
+          n
+          y
+          y
+          y
+          y
+      when: not mysql_installed.stat.exists
+
+  handlers:
+    - name: Restart MariaDB
+      systemd:
+        name: mariadb
+        state: restarted
+        enabled: yes
