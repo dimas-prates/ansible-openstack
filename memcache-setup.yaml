@@ -12,22 +12,26 @@
         - memcached
         - python3-memcached
 
+    - name: Get eth0 IP address
+      shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}'|head -n1
+      register: eth0_ip
+
     - name: Alter memcached configuration file
       replace:
         path: /etc/sysconfig/memcached
-        regexp: 'OPTIONS="-l 127.0.0.1,::1"'
-        replace: 'OPTIONS="-l 127.0.0.1,controller"'
+        regexp: '^OPTIONS="(.*)"'
+        replace: 'OPTIONS="-l {{ eth0_ip.stdout }}"'
       notify: Restart memcached
 
     - name: Ensure memcached service is enabled and restarted
-      service:
+      ansible.builtin.service:
         name: memcached
         state: started
         enabled: yes
 
   handlers:
     - name: Restart memcached
-      service:
+      ansible.builtin.service:
         name: memcached
         state: restarted
         enabled: yes
