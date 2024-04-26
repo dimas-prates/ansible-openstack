@@ -18,7 +18,6 @@
         - mariadb-server
         - python3-PyMySQL
       when: not mysql_installed.stat.exists
-      register: installed_by_script
 
     - name: Get eth0 IP address
       shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1
@@ -36,20 +35,6 @@
           collation-server = utf8_general_ci
           character-set-server = utf8
       notify: Restart MariaDB
-
-    - name: Run mysql_secure_installation script
-      command: >
-        mysql_secure_installation
-        creates: /root/.mysql_secure_installation_ran
-        stdin: |
-          y
-          n
-          n
-          y
-          y
-          y
-          y
-      when: installed_by_script.changed
 
   handlers:
     - name: Restart MariaDB
