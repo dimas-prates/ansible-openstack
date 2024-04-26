@@ -1,0 +1,23 @@
+---
+- name: Install and configure RabbitMQ
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Install RabbitMQ server
+      yum:
+        name: rabbitmq-server
+        state: present
+
+    - name: Start RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: started
+        enabled: yes
+
+    - name: Set RabbitMQ password from file
+      shell: rabbitmqctl add_user openstack "{{ lookup('file', 'rabbitmq_credential.env') | regex_replace('\n','') }}"
+
+    - name: Set RabbitMQ permissions
+      shell: rabbitmqctl set_permissions openstack ".*" ".*" ".*"
