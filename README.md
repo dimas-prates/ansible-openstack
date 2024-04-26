@@ -11,9 +11,9 @@ Request resumed:
 - [ ] Setup HAProxy on controller groups :round_pushpin:
 - [x] Deploy Memcached on controller groups
 - [ ] Password Manager (Optional)
-- [ ] Deploy RabbitMQ on controller groups :round_pushpin:
-- [ ] Deploy MariaDB on controller groups
-- [ ] Configure Ceph on storage groups
+- [x] Deploy RabbitMQ on controller groups 
+- [x] Deploy MariaDB on controller groups
+- [ ] Configure Ceph on storage groups :round_pushpin:
 
 ### Getting IP and Hostname from a network an making inventory:
 - necessary packages:
