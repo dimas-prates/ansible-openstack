@@ -6,3 +6,4 @@ openstack-inventory.ini
 
 #credentials
 ec2_credentials.j2
+rabbitmq_credential.env
