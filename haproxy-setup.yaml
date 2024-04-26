@@ -1,0 +1,10 @@
+- name: Install and configure HAProxy
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Ensure required packages are installed
+      yum:
+        name: haproxy
+        state: present
