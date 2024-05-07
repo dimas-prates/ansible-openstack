@@ -1,0 +1,90 @@
+---
+- name: Configure variables
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Create variables directory
+      ansible.builtin.file:
+        path: /var/lib/variables
+        state: directory
+
+    - name: Create os_env_variables file
+      ansible.builtin.lineinfile:
+        path: /var/lib/variables/os_env_variables
+        line: |
+          #!/bin/bash
+
+          ###############################################################################
+          #                                                                             #
+          #            DO NOT EDIT THE PARAMETERS FROM THIS POINT FORWARD               #
+          #                                                                             #
+          ###############################################################################
+
+          #custom
+          export CHARSET='A-Za-z0-9'
+          export LENGTH=64
+          export ERLANG_CHARSET='A-Z'
+
+          #CEPH HASH
+          export UUID_GEN=$(uuidgen)
+
+          #OPENSTACK SERVICE USERS PASSWORDS
+          export ROOT_SERVER_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export ADMIN_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export AODH_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export BARBICAN_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export CEILOMETER_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export CINDER_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export GLANCE_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export GNOCCHI_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export HEAT_DOMAIN_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export HEAT_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MAGNUM_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MANILA_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MURANO_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export NEUTRON_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export NOVA_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export PLACEMENT_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export SENLIN_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export SWIFT_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export TROVE_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export ZUN_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+
+          #SHARED SERVICES PASSWORDS
+          export CEPHUSER_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export CLUSTERCHECK_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export HAPROXY_ROOT="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export RABBIT_PASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export ERLANG_COOKIE="$(</dev/urandom tr -dc "$ERLANG_CHARSET" | head -c 20  ; echo)"
+
+
+          #DB USERS PASSWORDS
+          export ROOT_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export AODH_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export BARBICAN_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export CEILOMETER_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export CINDER_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export DASH_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export GLANCE_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export GNOCCHI_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export HEAT_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export KEYSTONE_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MAGNUM_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MANILA_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MURANO_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export MONGO_ADMIN_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export NEUTRON_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export NOVA_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export SENLIN_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export TROVE_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export WSREP_USER="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+          export ZUN_DBPASS="$(</dev/urandom tr -dc "$CHARSET" | head -c "$LENGTH"  ; echo)"
+
+          #NEUTRON
+          export METADATA_SECRET=$(openssl rand -hex 32)
+
+          #SWIFT
+          export SWIFT_HASH_PREFIX=$(openssl rand -hex 30)
+          export SWIFT_HASH_SUFFIX=$(openssl rand -hex 30)
