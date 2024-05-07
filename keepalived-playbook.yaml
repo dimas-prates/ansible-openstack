@@ -14,11 +14,6 @@
         path: /etc/keepalived
         state: directory
 
-    - name: Ensure keepalived.conf file exists
-      file:
-        path: /etc/keepalived/keepalived.conf
-        state: touch
-
     - name: Check if keepalived.conf exists
       stat:
         path: /etc/keepalived/keepalived.conf
@@ -26,10 +21,12 @@
 
     - name: Backup existing keepalived.conf if it exists
       when: keepalived_conf.stat.exists
-      copy:
-        src: /etc/keepalived/keepalived.conf
-        dest: /etc/keepalived/keepalived.conf.bak
-        remote_src: yes
+      command: mv -v /etc/keepalived/keepalived.conf /etc/keepalived/keepalived.conf.bak
+
+    - name: Ensure keepalived.conf file exists
+      file:
+        path: /etc/keepalived/keepalived.conf
+        state: touch
 
     - name: Generate new keepalived.conf
       blockinfile:
@@ -48,14 +45,14 @@
             state BACKUP
             priority 90
           {% endif %}
-            interface eth0
+            interface eth1
             virtual_router_id 3
             advert_int 1
             authentication {
                 auth_type NONE # No authentication
             }
             virtual_ipaddress {
-                10.66.66.3
+                10.166.166.3
             }
           }
       notify: Restart Keepalived service
