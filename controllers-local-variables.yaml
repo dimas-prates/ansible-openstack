@@ -11,9 +11,9 @@
         state: directory
 
     - name: Create os_env_variables file
-      ansible.builtin.lineinfile:
-        path: /var/lib/variables/os_env_variables
-        line: |
+      copy:
+        dest: /var/lib/variables/os_env_variables
+        content: |
           #!/bin/bash
 
           ###############################################################################
