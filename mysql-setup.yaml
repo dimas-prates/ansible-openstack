@@ -17,7 +17,16 @@
         - mariadb
         - mariadb-server
         - python3-PyMySQL
+        - galera
+        - expect
       when: not mysql_installed.stat.exists
+
+    - name: Ensure mariadb service is started and enabled
+      when: not mysql_installed.stat.exists
+      service:
+        name: mariadb
+        state: started
+        enabled: yes
 
     - name: Get eth0 IP address
       shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1
@@ -35,6 +44,20 @@
           collation-server = utf8_general_ci
           character-set-server = utf8
       notify: Restart MariaDB
+
+    - name: Run mysql_secure_installation
+      expect:
+        command: mysql_secure_installation
+        responses:
+          "Enter current password for root": ""
+          "Set root password": "n"
+          "Remove anonymous users": "y"
+          "Disallow root login remotely": "y"
+          "Remove test database": "y"
+          "Reload privilege tables now": "y"
+        timeout: 1
+      register: secure_mariadb
+      failed_when: "'... Failed!' in secure_mariadb.stdout_lines"
 
   handlers:
     - name: Restart MariaDB
