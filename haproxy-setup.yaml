@@ -1,10 +1,75 @@
 - name: Install and configure HAProxy
-  hosts: controller
+  hosts: controller-1
   vars:
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
   become: yes
   tasks:
-    - name: Ensure required packages are installed
+    - name: Install HAProxy
       yum:
         name: haproxy
         state: present
+    - name: Copy HAProxy configuration file
+      copy:
+        content: |
+          #---------------------------------------------------------------------
+          # Global settings
+          #---------------------------------------------------------------------
+          global
+              log /dev/log local0
+              maxconn 16384
+              daemon
+              ssl-default-bind-ciphers ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA256
+              ssl-default-bind-options ssl-min-ver TLSv1.2 no-tls-tickets
+              tune.ssl.default-dh-param 2048
+
+          defaults
+              log global
+              mode tcp
+              option dontlognull
+              option redispatch
+              option forceclose
+              retries 3
+              timeout client 50s
+              timeout connect 30s
+              timeout http-request 5s
+              timeout server 50s
+              maxconn 16384
+
+          listen stats
+              bind 10.66.66.119:9000  # Listen on localhost:9000
+              mode http
+              stats enable  # Enable stats page
+              stats refresh 10s
+              stats hide-version  # Hide HAProxy version
+              stats realm Haproxy\ Statistics  # Title text for popup window
+              stats uri /haproxy-stats  # Stats URI
+
+          frontend memcached_cluster
+              bind 10.66.66.3:11211
+              mode tcp
+              use_backend back_memcached
+
+          frontend rabbitmq_cluster
+              bind 10.66.66.3:5672
+              mode tcp
+              use_backend back_rabbitmq
+
+          backend back_memcached
+              balance source
+              server controller-1 10.66.66.119:11211 check inter 2000 rise 2 fall 5
+              server controller-2 10.66.66.10:11211 check inter 2000 rise 2 fall 5
+              server controller-3 10.66.66.63:11211 check inter 2000 rise 2 fall 5
+
+          backend back_rabbitmq
+              balance source
+              server controller-1 10.66.66.119:5672 check inter 2000 rise 2 fall 5
+              server controller-2 10.66.66.10:5672 check inter 2000 rise 2 fall 5
+              server controller-3 10.66.66.63:5672 check inter 2000 rise 2 fall 5
+        dest: /etc/haproxy/haproxy.cfg
+      notify: Restart HAProxy service
+
+  handlers:
+    - name: Restart HAProxy service
+      systemd:
+        name: haproxy
+        state: restarted
