@@ -16,8 +16,19 @@
         state: started
         enabled: yes
 
+    - name: Get eth0 IP address
+      shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1
+      register: eth0_ip
+    - name: Replace ip section of the configuration
+      replace:
+        path: /etc/rabbitmq/rabbitmq.conf
+        regexp: "^# listeners.tcp.local    = ()*:5672$"
+        replace: "listeners.tcp.local    = {{ eth0_ip.stdout }}:5672"
+        backup: yes
+
     - name: Set RabbitMQ password from file
       shell: rabbitmqctl add_user openstack "{{ lookup('file', 'rabbitmq_credential.env') | regex_replace('\n','') }}"
 
     - name: Set RabbitMQ permissions
       shell: rabbitmqctl set_permissions openstack ".*" ".*" ".*"
+      # listeners.tcp.local    = 127.0.0.1:5672
