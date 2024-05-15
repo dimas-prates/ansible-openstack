@@ -43,7 +43,15 @@
               stats hide-version  # Hide HAProxy version
               stats realm Haproxy\ Statistics  # Title text for popup window
               stats uri /haproxy-stats  # Stats URI
+          #---------------------------------------------------------------------
+          # Frontends
+          #---------------------------------------------------------------------
 
+          #frontend galera_cluster
+          #      bind 10.66.66.3:3306
+          #      bind *:3306
+          #      mode tcp
+          #      use_backend back_galera
           frontend memcached_cluster
               bind 10.66.66.3:11211
               mode tcp
@@ -53,7 +61,17 @@
               bind 10.66.66.3:5672
               mode tcp
               use_backend back_rabbitmq
+          #---------------------------------------------------------------------
+          #Backends
+          #---------------------------------------------------------------------
 
+          #backend back_galera
+          #    balance source
+          #    option httpchk
+          #    option tcpka
+          #    server controller-1 10.66.66.119:3306 inter 2000 rise 2 fall 5
+          #    server controller-2 10.66.66.10:3306 backup inter 2000 rise 2 fall 5
+          #    server controller-3 10.66.66.63:3306 backup inter 2000 rise 2 fall 5
           backend back_memcached
               balance source
               server controller-1 10.66.66.119:11211 check inter 2000 rise 2 fall 5
