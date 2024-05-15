@@ -4,6 +4,34 @@
     ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
   become: yes
   tasks:
+    - name: Comment out line in /etc/hosts
+      lineinfile:
+        path: /etc/hosts
+        regexp: '^::1\s+localhost\s+localhost.localdomain\s+localhost6\s+localhost6.localdomain6$'
+        line: "# ::1         localhost localhost.localdomain localhost6 localhost6.localdomain6"
+        backup: no
+
+    - name: Get current network connections
+      shell: nmcli -t -f NAME,DEVICE con show | cut -d":" -f1,2 | grep -i eth
+      register: current_connections
+      changed_when: false
+
+    - name: Modify connection names
+      shell: nmcli con mod "{{ item.split(':')[0] }}" connection.id "{{ item.split(':')[1] }}"
+      loop: "{{ current_connections.stdout_lines }}"
+      when: current_connections.stdout_lines | length > 0
+      ignore_errors: yes # Ignore errors if the connection name is already changed
+
+    - name: Disable IPv6 on interface connections
+      shell: nmcli con mod "{{ item.split(':')[1] }}" ipv6.method "disabled"
+      loop: "{{ current_connections.stdout_lines }}"
+      when: current_connections.stdout_lines | length > 0
+      ignore_errors: yes # Ignore errors if IPv6 is already disabled
+
+    - name: Refresh interface connections
+      ansible.builtin.shell: nmcli con up "{{ item.split(':')[1] }}"
+      loop: "{{ current_connections.stdout_lines }}"
+      when: current_connections.stdout_lines | length > 0
     - name: Set vm.swappiness using sysctl
       sysctl:
         name: vm.swappiness
@@ -33,6 +61,20 @@
         path: /etc/selinux/config
         regexp: "^SELINUX="
         line: "SELINUX=permissive"
+
+- name: Configure /etc/hosts
+  hosts: controller
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  become: yes
+  tasks:
+    - name: Insert host entries into /etc/hosts
+      ansible.builtin.lineinfile:
+        path: /etc/hosts
+        line: "{{ hostvars[item]['ansible_host'] }} {{ hostvars[item]['ansible_hostname'] }}.novalocal {{ hostvars[item]['ansible_hostname'] }}"
+        regexp: "^{{ hostvars[item]['ansible_host'] }} {{ hostvars[item]['ansible_hostname'] }}\\.novalocal {{ hostvars[item]['ansible_hostname'] }}"
+        state: present
+      loop: "{{ groups['controller'] }}"
 
 - name: Configure net.ipv4.ip_forward only on "vpn" hosts
   hosts: vpn
