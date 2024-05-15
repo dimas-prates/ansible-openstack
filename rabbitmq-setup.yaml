@@ -10,25 +10,136 @@
         name: rabbitmq-server
         state: present
 
-    - name: Start RabbitMQ service and enable on boot
-      systemd:
-        name: rabbitmq-server
-        state: started
-        enabled: yes
-
     - name: Get eth0 IP address
       shell: ip addr show eth0 | grep -oP '(?<=inet\s)\d+(\.\d+){3}' | head -n1
       register: eth0_ip
+
     - name: Replace ip section of the configuration
       replace:
         path: /etc/rabbitmq/rabbitmq.conf
-        regexp: "^# listeners.tcp.local    = ()*:5672$"
+        regexp: "^# listeners.tcp.local    = .*:5672$"
         replace: "listeners.tcp.local    = {{ eth0_ip.stdout }}:5672"
         backup: yes
 
+    - name: Start RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+        enabled: yes
+
+- name: Transfering cookie on controller-1
+  hosts: controller-1
+  become: yes
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
+    - name: Stop RabbitMQ application
+      shell: rabbitmqctl stop_app
+
+    - name: Reset RabbitMQ
+      shell: rabbitmqctl reset
+
+    - name: Start RabbitMQ application
+      shell: rabbitmqctl start_app
+
+    - name: Enable RabbitMQ management plugin
+      shell: rabbitmq-plugins enable rabbitmq_management
+
+    - name: Start RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+        enabled: yes
+
+    - name: Stop RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: stopped
+        enabled: yes
+    - name: Create rabbit cookie directory
+      file:
+        path: "/object-storage/rabbitmq"
+        state: directory
+        mode: "0755"
+
+    - name: Save Erlang cookie
+      copy:
+        src: "/var/lib/rabbitmq/.erlang.cookie"
+        dest: "/object-storage/rabbitmq"
+        backup: yes
+        mode: "0400"
+- name: Cookie saving
+  hosts: controller-2:controller-3
+  become: yes
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
+    - name: Stop RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: stopped
+        enabled: yes
+
+    - name: Save Erlang cookie
+      copy:
+        src: "/object-storage/rabbitmq"
+        dest: "/var/lib/rabbitmq/.erlang.cookie"
+        force: yes
+        mode: "0400"
+    - name: Set ownership of the Erlang cookie
+      file:
+        path: "/var/lib/rabbitmq/.erlang.cookie"
+        owner: rabbitmq
+        group: rabbitmq
+    - name: start RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+        enabled: yes
+- name: Starting cluster on node01
+  hosts: controller-1
+  become: yes
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
+    - name: start RabbitMQ service and enable on boot
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+        enabled: yes
+
+- name: Joining cluster
+  hosts: controller-2:controller-3
+  become: yes
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
+    - name: Stop RabbitMQ application
+      shell: rabbitmqctl stop_app
+
+    - name: Reset RabbitMQ
+      shell: rabbitmqctl reset
+
+    - name: Join RabbitMQ cluster
+      shell: join_cluster rabbit@controller-1
+
+    - name: Start RabbitMQ application
+      shell: rabbitmqctl start_app
+
+- name: Starting cluster on node01
+  hosts: controller-1
+  become: yes
+  vars:
+    ansible_ssh_common_args: "-o StrictHostKeyChecking=no" # Additional SSH options
+  tasks:
     - name: Set RabbitMQ password from file
-      shell: rabbitmqctl add_user openstack "{{ lookup('file', 'rabbitmq_credential.env') | regex_replace('\n','') }}"
+      shell: rabbitmqctl add_user openstack {{ RABBIT_PASS }}
+      vars:
+        RABBIT_PASS: "coelho@123"
 
     - name: Set RabbitMQ permissions
       shell: rabbitmqctl set_permissions openstack ".*" ".*" ".*"
-      # listeners.tcp.local    = 127.0.0.1:5672
+
+    - name: Set RabbitMQ policy
+      ansible.builtin.shell: |
+        rabbitmqctl set_policy ha-all '^(?!amq\.).*' '{"ha-mode": "all"}'
